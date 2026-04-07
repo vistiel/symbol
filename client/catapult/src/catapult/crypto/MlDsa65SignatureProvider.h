@@ -30,7 +30,10 @@ namespace catapult { namespace crypto {
 	public:
 		/// ML-DSA-65 key and signature sizes (from FIPS 204).
 		static constexpr size_t Public_Key_Size = 1952;
-		static constexpr size_t Private_Key_Size = 4032;
+		static constexpr size_t Oqs_Secret_Key_Size = 4032;
+		/// Private key stores sk(4032) || pk(1952) — mirrors libsodium Ed25519 convention.
+		/// This allows extractPublicKey to retrieve the embedded public key.
+		static constexpr size_t Private_Key_Size = Oqs_Secret_Key_Size + Public_Key_Size;
 		static constexpr size_t Signature_Size = 3309;
 
 	public:

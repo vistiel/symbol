@@ -67,14 +67,12 @@ namespace catapult { namespace crypto {
 	}
 
 	void MlDsa65SignatureProvider::extractPublicKey(const SecureCryptoBuffer& privateKey, CryptoBuffer& publicKey) const {
-		// ML-DSA does not support cheap public key extraction from private key.
-		// The public key is embedded in the latter portion of the private key in the liboqs representation.
-		// For now, we extract it from the stored key pair (the public key is the last 1952 bytes of the secret key).
+		// Private key format: sk(4032) || pk(1952).
+		// The public key is stored after the OQS secret key material.
 		if (Private_Key_Size != privateKey.size())
 			CATAPULT_THROW_INVALID_ARGUMENT_1("invalid private key size for ML-DSA-65", privateKey.size());
 
-		// In liboqs ML-DSA-65 secret key format, the public key is stored at the end
-		publicKey = CryptoBuffer(privateKey.data() + Private_Key_Size - Public_Key_Size, Public_Key_Size);
+		publicKey = CryptoBuffer(privateKey.data() + Oqs_Secret_Key_Size, Public_Key_Size);
 	}
 
 	void MlDsa65SignatureProvider::sign(
@@ -135,12 +133,18 @@ namespace catapult { namespace crypto {
 
 	void MlDsa65SignatureProvider::generateKeyPair(SecureCryptoBuffer& privateKey, CryptoBuffer& publicKey) const {
 		publicKey = CryptoBuffer(Public_Key_Size);
-		privateKey = SecureCryptoBuffer(Private_Key_Size);
+		privateKey = SecureCryptoBuffer(Private_Key_Size);  // sk(4032) || pk(1952)
 
-		auto result = OQS_SIG_ml_dsa_65_keypair(publicKey.data(), privateKey.data());
+		// Generate keypair: write pk at offset Oqs_Secret_Key_Size within the private key buffer
+		auto result = OQS_SIG_ml_dsa_65_keypair(
+				privateKey.data() + Oqs_Secret_Key_Size,  // pk embedded after sk
+				privateKey.data());                       // sk at start
 		if (OQS_SUCCESS != result) {
 			SecureZero(privateKey.data(), privateKey.size());
 			CATAPULT_THROW_RUNTIME_ERROR("ML-DSA-65 key pair generation failed");
 		}
+
+		// Also return the public key separately
+		std::memcpy(publicKey.data(), privateKey.data() + Oqs_Secret_Key_Size, Public_Key_Size);
 	}
 }}
