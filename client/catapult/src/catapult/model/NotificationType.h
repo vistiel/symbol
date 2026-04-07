@@ -145,6 +145,12 @@ namespace catapult { namespace model {
 	/// Block was received (type information only).
 	DEFINE_CORE_NOTIFICATION(Block_Type, 0x0013, Validator);
 
+	/// V2 signature with variable-length crypto fields was received.
+	DEFINE_CORE_NOTIFICATION(Signature_V2, 0x0017, Validator);
+
+	/// V2 account with variable-length public key was registered.
+	DEFINE_CORE_NOTIFICATION(Register_Account_Public_Key_V2, 0x0018, All);
+
 #undef DEFINE_CORE_NOTIFICATION
 
 	// endregion
