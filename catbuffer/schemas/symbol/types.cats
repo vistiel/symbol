@@ -118,6 +118,18 @@ struct UnresolvedMosaic
 	# Mosaic amount.
 	amount = Amount
 
+# Cryptographic scheme identifier for crypto-agile entities.
+#
+# Determines the sizes of Signature and PublicKey fields in V2 wire format.
+# The scheme ID occupies the first byte of the former Reserved1 field,
+# making Ed25519 V2 entities binary-compatible with V1 (since Reserved1 was always 0).
+enum CryptoSchemeId : uint8
+	# Ed25519 (default, backward-compatible with V1).
+	ED25519 = 0x00
+
+	# ML-DSA-65 (Dilithium3, NIST FIPS 204 post-quantum signature).
+	ML_DSA_65 = 0x01
+
 # Link actions.
 enum LinkAction : uint8
 	# Unlink an account.
